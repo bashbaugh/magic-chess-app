@@ -17,11 +17,12 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        initialRoute: '/load',
-        routes: <String, WidgetBuilder>{
-          '/load': (BuildContext context) => const AppLoadPage(),
-          '/': (BuildContext context) => const MainPage(),
-        });
+        // initialRoute: '/load',
+        // routes: <String, WidgetBuilder>{
+        //   '/load': (BuildContext context) => const AppLoadPage(),
+        //   '/': (BuildContext context) => const MainPage(),
+        // });
+        home: const MainPage());
   }
 }
 
@@ -35,7 +36,9 @@ class AppLoadPage extends StatefulWidget {
 class _AppLoadPageState extends State<AppLoadPage> {
   @override
   Widget build(BuildContext context) {
-    Navigator.pushReplacementNamed(context, '/');
+    Future.delayed(Duration.zero, () {
+      Navigator.pushReplacementNamed(context, '/');
+    });
     return const Scaffold(body: Center(child: Text('Loading...')));
   }
 }
