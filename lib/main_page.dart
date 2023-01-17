@@ -1,5 +1,6 @@
 import 'package:chessapp/chess_board.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -9,6 +10,8 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  final ble = FlutterReactiveBle();
+
   int _selectedIndex = 0;
   static const TextStyle optionStyle =
       TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
@@ -29,8 +32,20 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
+  void _scanForBoard() {
+    ble.scanForDevices(
+        withServices: [Uuid.parse("00000001-502e-4e1d-b821-ae2488aa4202")],
+        scanMode: ScanMode.lowLatency).listen((device) {
+      print(device);
+    }, onError: (error) {
+      print(error);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    _scanForBoard();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Chess"),
