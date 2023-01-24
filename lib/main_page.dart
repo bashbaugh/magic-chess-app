@@ -50,11 +50,17 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-  void _findBoard() {
+  late QualifiedCharacteristic pingChrc;
+
+  void _findAndConnectToBoard() {
     ble.scanForDevices(
         withServices: [Uuid.parse("00000001-502e-4e1d-b821-ae2488aa4202")],
         scanMode: ScanMode.lowLatency).listen((device) {
-      print(device);
+      ble.connectToDevice(id: device.id).listen((conn) {
+        print(conn.connectionState);
+      }, onError: (Object error) {
+        // Handle a possible error
+      });
     }, onError: (error) {
       print(error);
     });
@@ -64,7 +70,7 @@ class _MainPageState extends State<MainPage> {
     ble.statusStream.listen((status) {
       if (status == BleStatus.ready) {
         print("BLE is ready");
-        _findBoard();
+        _findAndConnectToBoard();
       }
     });
   }
