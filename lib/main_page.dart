@@ -11,28 +11,46 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   final ble = FlutterReactiveBle();
+  bool connected = false;
+  bool scanning = false;
 
-  int _selectedIndex = 0;
+  int _bottomNavSelectedIndex = 0;
   static const TextStyle optionStyle =
-      TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
-  static const List<Widget> _widgetOptions = <Widget>[
-    Text(
-      'CHESS',
-      style: optionStyle,
-    ),
-    Text(
+      TextStyle(fontSize: 25, fontWeight: FontWeight.bold);
+  static final List<Widget> _bottomNavTabs = <Widget>[
+    Column(children: [
+      Container(
+        padding: const EdgeInsets.all(30),
+        child: const ChessBoard(),
+      ),
+      const Text(
+        'Chess',
+        style: optionStyle,
+      ),
+    ]),
+    const Text(
       'SETTINGS',
       style: optionStyle,
+    ),
+  ];
+  static const _connectedBottomNavItems = <BottomNavigationBarItem>[
+    BottomNavigationBarItem(
+      icon: Icon(Icons.gamepad),
+      label: 'Chess',
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.settings),
+      label: 'Settings',
     ),
   ];
 
   void _onItemTapped(int index) {
     setState(() {
-      _selectedIndex = index;
+      _bottomNavSelectedIndex = index;
     });
   }
 
-  void _scanForBoard() {
+  void _findBoard() {
     ble.scanForDevices(
         withServices: [Uuid.parse("00000001-502e-4e1d-b821-ae2488aa4202")],
         scanMode: ScanMode.lowLatency).listen((device) {
@@ -42,46 +60,52 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
+  void _prepareBle() {
+    ble.statusStream.listen((status) {
+      if (status == BleStatus.ready) {
+        print("BLE is ready");
+        _findBoard();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    _scanForBoard();
+    _prepareBle();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Chess"),
-        automaticallyImplyLeading: false,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            _widgetOptions.elementAt(_selectedIndex),
-            Container(
-              padding: const EdgeInsets.all(30),
-              child: const ChessBoard(),
-            )
-          ],
+        appBar: AppBar(
+          title: const Text("Chess"),
+          automaticallyImplyLeading: false,
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.gamepad),
-            label: 'Chess',
-          ),
-          // BottomNavigationBarItem(
-          //   icon: Icon(Icons.business),
-          //   label: 'Business',
-          // ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.amber[800],
-        onTap: _onItemTapped,
-      ),
-    );
+        body: Center(
+          child: connected
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    _bottomNavTabs.elementAt(_bottomNavSelectedIndex),
+                  ],
+                )
+              : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  const Text("Connect to your Chessboard",
+                      style: TextStyle(fontSize: 17)),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                      onPressed: () {
+                        // _findAndConnect();
+                      },
+                      child: const Text("Connect"))
+                ]),
+        ),
+        bottomNavigationBar: () {
+          if (connected) {
+            return BottomNavigationBar(
+              items: _connectedBottomNavItems,
+              currentIndex: _bottomNavSelectedIndex,
+              selectedItemColor: Colors.amber[800],
+              onTap: _onItemTapped,
+            );
+          }
+        }());
   }
 }
