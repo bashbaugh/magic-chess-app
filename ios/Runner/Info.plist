@@ -50,5 +50,7 @@
 
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Bluetooth is required to connect to your chessboard</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Bluetooth is required to connect to your chessboard</string>
 </dict>
 </plist>

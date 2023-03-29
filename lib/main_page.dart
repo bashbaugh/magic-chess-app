@@ -53,14 +53,27 @@ class _MainPageState extends State<MainPage> {
   late QualifiedCharacteristic pingChrc;
 
   void _findAndConnectToBoard() {
+    bool found = false;
+
     ble.scanForDevices(
         withServices: [Uuid.parse("00000001-502e-4e1d-b821-ae2488aa4202")],
         scanMode: ScanMode.lowLatency).listen((device) {
-      ble.connectToDevice(id: device.id).listen((conn) {
-        print(conn.connectionState);
-      }, onError: (Object error) {
-        // Handle a possible error
-      });
+      if (device.name == "magic-chessboard" && !found) {
+        found = true;
+        print("Found BLE chessboard");
+        ble.connectToDevice(id: device.id).listen((conn) {
+          print(conn.connectionState);
+          if (conn.connectionState == DeviceConnectionState.connected) {
+            print("Connected to board");
+            setState(() {
+              connected = true;
+            });
+          }
+        }, onError: (Object error) {
+          print(error);
+          // Handle a possible error
+        });
+      }
     }, onError: (error) {
       print(error);
     });
@@ -68,9 +81,12 @@ class _MainPageState extends State<MainPage> {
 
   void _prepareBle() {
     ble.statusStream.listen((status) {
-      if (status == BleStatus.ready) {
+      if (status == BleStatus.ready && !scanning) {
         print("BLE is ready");
         _findAndConnectToBoard();
+        setState(() {
+          scanning = true;
+        });
       }
     });
   }
@@ -98,7 +114,7 @@ class _MainPageState extends State<MainPage> {
                   SizedBox(height: 20),
                   ElevatedButton(
                       onPressed: () {
-                        // _findAndConnect();
+                        // _findAndConnectToBoard();
                       },
                       child: const Text("Connect"))
                 ]),
